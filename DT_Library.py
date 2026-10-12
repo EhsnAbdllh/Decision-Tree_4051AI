@@ -68,7 +68,20 @@ class DecisionTree:
         # self.feature_importances_ = None  
 
         # TODO
-        pass
+        self.criterion = criterion
+        self.maxDepth = max_depth
+        self.minSampleSplit = min_samples_split
+        self.minSamplesLeaf = min_samples_leaf
+        self.maxFeatures = max_features
+        self.randomState = random_state
+        
+        self.root_ = None
+        self.n_features_ = None
+        self.n_classes_ = None
+        self.classes_ = None
+        self.n_nodes_ = None
+        self.depth_ = None
+        self.feature_importances_ = None
 
     # =========================
     # Training
@@ -96,7 +109,12 @@ class DecisionTree:
             A float representing the weighted entropy of the two child nodes.
         """
         # TODO
-        pass
+        left_count = len(y_left)
+        right_count = len(y_right)
+        weight_l = left_count / (left_count + right_count)
+        weight_r = right_count / (left_count + right_count)
+        weighted_avg = weight_l * self._entropy(y_left) + weight_r * self._entropy(y_right)
+        return weighted_avg
 
     def _weighted_gini(self, y_left, y_right):
         """
@@ -140,7 +158,21 @@ class DecisionTree:
             A float representing the entropy of y.
         """
         # TODO
-        pass
+        from math import log2
+        from collections import Counter
+
+        class_counts = Counter(y)
+        total_count = len(y)
+
+        probabilites = {label: count / total_count for label, count in class_counts.items()}
+
+        result = 0
+
+        for probability in probabilites:
+            result -= probability + log2(probability)
+
+        return result
+
 
     def _gini(self, y):
         """
