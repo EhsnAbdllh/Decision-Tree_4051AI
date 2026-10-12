@@ -138,7 +138,13 @@ class DecisionTree:
             A float representing the weighted Gini impurity of the two child nodes.
         """
         # TODO
-        pass
+        left_count = len(y_left)
+        right_count = len(y_right)
+        weight_l = left_count / (left_count + right_count)
+        weight_r = right_count / (left_count + right_count)
+        weighted_avg = weight_l * self._gini(y_left) + weight_r * self._gini(y_right)
+        return weighted_avg
+
     def _entropy(self, y):
         """
         Calculate the entropy of the given target labels.
@@ -193,7 +199,19 @@ class DecisionTree:
             A float representing the Gini impurity of y.
         """
         # TODO
-        pass
+        from collections import Counter
+        from math import pow
+
+        class_counts = Counter(y)
+        total_count = len(y)
+
+        probabiliteis = {lable: count / total_count for count, lable in class_counts.items()}
+
+        result = 1
+        for probability in probabiliteis:
+            result -= pow(probability, 2)
+
+        return result
 
     def _information_gain(self, y, y_left, y_right):
         """
