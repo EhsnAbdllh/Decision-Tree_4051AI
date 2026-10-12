@@ -20,7 +20,14 @@
         Constructor for Node class
         with the attributes and hyperparameters.
         """
-        raise  NotImplementedError
+        self.featureIndex = feature_index
+        self.threshold = threshold
+        self.left = left
+        self.right = right
+        self.value = value
+        self.samples = samples
+        self.impurity = impurity
+        self.classCounts = class_counts
 
     def is_leaf(self):
         """
@@ -28,7 +35,7 @@
         Return True if the node has no children; otherwise, return False.
         """
         # TODO
-        pass
+        return self.left is None and self.right is None
 
 
 class DecisionTree:
