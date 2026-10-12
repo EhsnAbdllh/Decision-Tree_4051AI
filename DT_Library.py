@@ -236,7 +236,13 @@ class DecisionTree:
             A float representing the information gain of the split.
         """
         # TODO
-        pass
+        left_count = len(y_left)
+        right_count = len(y_right)
+        weight_l = left_count / (left_count + right_count) 
+        weight_r = right_count / (left_count + right_count)
+        gain = self._calculate_impurity(y) - weight_l * self._calculate_impurity(y_left)
+        - weight_r * self._calculate_impurity(y_right)
+        return gain
 
     def fit(self, X, y):
         """
@@ -608,7 +614,12 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        if self.criterion == "gini":
+            impurity = self._gini(y)
+        elif self.criterion == "entropy":
+            impurity = self._entropy(y)
+
+        return impurity
 
     def _calculate_information_gain(self, parent_y, left_y, right_y):
         """
@@ -679,7 +690,13 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        left_count = len(left_y)
+        right_count = len(right_y)
+        weight_l = left_count / (left_count + right_count) 
+        weight_r = right_count / (left_count + right_count)
+        gain = self._calculate_impurity(parent_y) - weight_l * self._calculate_impurity(left_y)
+        - weight_r * self._calculate_impurity(right_y)
+        return gain
 
     def _is_stopping_condition(self, X, y, depth):
         """
