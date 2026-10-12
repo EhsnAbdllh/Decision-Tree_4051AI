@@ -236,12 +236,11 @@ class DecisionTree:
             A float representing the information gain of the split.
         """
         # TODO
-        left_count = len(y_left)
-        right_count = len(y_right)
-        weight_l = left_count / (left_count + right_count) 
-        weight_r = right_count / (left_count + right_count)
-        gain = self._calculate_impurity(y) - weight_l * self._calculate_impurity(y_left)
-        - weight_r * self._calculate_impurity(y_right)
+        if self.criterion == "gini":
+            gain = self._gini(y) - self._weighted_gini(y_left, y_right)
+        elif self.criterion == "entropy":
+            gain = self._entropy(y) - self._weighted_entropy(y_left, y_right)
+
         return gain
 
     def fit(self, X, y):
