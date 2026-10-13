@@ -420,7 +420,25 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        import numpy as np
+
+        samples = np.asarray(X)
+        lables = np.asarray(y)
+        results = np.array([len(samples), 3])
+
+        for feature_index in range(len(samples)):
+            feature_values = samples[:, feature_index]
+            thresholds = self._get_candidate_thresholds(feature_values)
+            
+            for threshold in thresholds:
+                left, right, left_lables, right_lables = self._split(samples, lables, feature_index, threshold)
+                gain = self._information_gain(lables, left_lables, right_lables)
+                results[feature_index] = [feature_index, threshold, gain]
+
+        best_feature_index, best_threshold, best_gain = results[np.argmax(results[:, 2])]
+
+        return best_feature_index, best_threshold
+
 
     def _split(self, X, y, feature_index, threshold):
         """
@@ -505,7 +523,18 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        import numpy as np
+
+        samples = np.asarray(X)
+        lables = np.asarray(y)
+        condition = samples[:, feature_index] <= threshold
+        left = samples[condition]
+        right = samples[~condition]
+        left_lables = lables[:len(left)]
+        right_lables = lables[len(left):]
+
+        return left, right, left_lables, right_lables
+
 
     def _get_candidate_thresholds(self, feature_values):
         """
@@ -568,7 +597,15 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        import numpy as np
+
+        values = np.asarray(feature_values)
+        unique_values = np.unique(values)
+        values.sort()
+        thresholds = (unique_values[:-1] + unique_values[1:]) / 2
+
+        for threshold in thresholds:
+            yield threshold
 
     def _calculate_impurity(self, y):
         """
