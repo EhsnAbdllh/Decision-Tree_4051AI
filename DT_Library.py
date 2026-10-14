@@ -1,4 +1,6 @@
-﻿class Node:
+﻿import numpy as np
+
+class Node:
     """
         Represents a node of the decision tree.
     
@@ -82,6 +84,7 @@ class DecisionTree:
         self.n_nodes_ = None
         self.depth_ = None
         self.feature_importances_ = None
+        self.rng_ = np.random.default_rng(random_state)
 
     # =========================
     # Training
@@ -420,22 +423,34 @@ class DecisionTree:
         """
 
         # TODO
-        import numpy as np
-
         samples = np.asarray(X)
         lables = np.asarray(y)
-        results = np.array([len(samples), 3])
 
-        for feature_index in range(len(samples)):
+        if self.maxFeatures is None:
+            feature_indices = np.arange(self.n_features_)
+        else:
+            feature_indices = self.rng_.choice(self.n_features_, size=self.maxFeatures, replace=False)
+
+        best_gain = 0
+        best_feature_index = None
+        best_threshold = None
+
+        for feature_index in feature_indices:
             feature_values = samples[:, feature_index]
             thresholds = self._get_candidate_thresholds(feature_values)
-            
-            for threshold in thresholds:
-                left, right, left_lables, right_lables = self._split(samples, lables, feature_index, threshold)
-                gain = self._information_gain(lables, left_lables, right_lables)
-                results[feature_index] = [feature_index, threshold, gain]
 
-        best_feature_index, best_threshold, best_gain = results[np.argmax(results[:, 2])]
+            for threshold in thresholds:
+                left, left_lables, right, right_lables = self._split(samples, lables, feature_index, threshold)
+
+                if len(left) < self.minSamplesLeaf or len(right) < self.minSamplesLeaf:
+                    continue
+
+                gain = self._information_gain(lables, left_lables, right_lables)
+
+                if gain > best_gain:
+                    best_gain = gain
+                    best_feature_index = feature_index
+                    best_threshold = threshold
 
         return best_feature_index, best_threshold
 
@@ -523,17 +538,15 @@ class DecisionTree:
         """
 
         # TODO
-        import numpy as np
-
         samples = np.asarray(X)
         lables = np.asarray(y)
         condition = samples[:, feature_index] <= threshold
         left = samples[condition]
         right = samples[~condition]
-        left_lables = lables[:len(left)]
-        right_lables = lables[len(left):]
+        left_lables = lables[condition]
+        right_lables = lables[~condition]
 
-        return left, right, left_lables, right_lables
+        return left, left_lables, right, right_lables
 
 
     def _get_candidate_thresholds(self, feature_values):
@@ -597,12 +610,9 @@ class DecisionTree:
         """
 
         # TODO
-        import numpy as np
-
         values = np.asarray(feature_values)
         unique_values = np.unique(values)
-        values.sort()
-        thresholds = (unique_values[:-1] + unique_values[1:]) / 2
+        thresholds = (unique_values[:-1] + unique_values[1:]) / 2 # mean of consequtive values
 
         for threshold in thresholds:
             yield threshold
