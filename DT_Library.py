@@ -22,14 +22,14 @@ class Node:
         Constructor for Node class
         with the attributes and hyperparameters.
         """
-        self.featureIndex = feature_index
+        self.feature_index = feature_index
         self.threshold = threshold
         self.left = left
         self.right = right
         self.value = value
         self.samples = samples
         self.impurity = impurity
-        self.classCounts = class_counts
+        self.class_counts = class_counts
 
     def is_leaf(self):
         """
@@ -71,11 +71,11 @@ class DecisionTree:
 
         # TODO
         self.criterion = criterion
-        self.maxDepth = max_depth
-        self.minSampleSplit = min_samples_split
-        self.minSamplesLeaf = min_samples_leaf
-        self.maxFeatures = max_features
-        self.randomState = random_state
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.max_features = max_features
+        self.random_state = random_state
         
         self.root_ = None
         self.n_features_ = None
@@ -426,10 +426,10 @@ class DecisionTree:
         samples = np.asarray(X)
         lables = np.asarray(y)
 
-        if self.maxFeatures is None:
+        if self.max_features is None:
             feature_indices = np.arange(self.n_features_)
         else:
-            feature_indices = self.rng_.choice(self.n_features_, size=self.maxFeatures, replace=False)
+            feature_indices = self.rng_.choice(self.n_features_, size=self.max_features, replace=False)
 
         best_gain = 0
         best_feature_index = None
@@ -442,7 +442,7 @@ class DecisionTree:
             for threshold in thresholds:
                 left, left_lables, right, right_lables = self._split(samples, lables, feature_index, threshold)
 
-                if len(left) < self.minSamplesLeaf or len(right) < self.minSamplesLeaf:
+                if len(left) < self.min_samples_leaf or len(right) < self.min_samples_leaf:
                     continue
 
                 gain = self._information_gain(lables, left_lables, right_lables)
