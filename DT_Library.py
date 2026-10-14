@@ -736,13 +736,7 @@ class DecisionTree:
         """
 
         # TODO
-        left_count = len(left_y)
-        right_count = len(right_y)
-        weight_l = left_count / (left_count + right_count) 
-        weight_r = right_count / (left_count + right_count)
-        gain = self._calculate_impurity(parent_y) - weight_l * self._calculate_impurity(left_y)
-        - weight_r * self._calculate_impurity(right_y)
-        return gain
+        return self._information_gain(parent_y, left_y, right_y)
 
     def _is_stopping_condition(self, X, y, depth):
         """
