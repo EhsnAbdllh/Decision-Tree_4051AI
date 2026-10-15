@@ -275,11 +275,13 @@ class DecisionTree:
             inside _build_tree().
         """
         # TODO
-        self.n_features_ = len(X)
+        samples = np.asarray(X)
+        lables = np.asarray(y)
+        self.n_features_ = samples.shape[1]
         self.feature_importances_ = np.zeros(self.n_features_)
         self.classes_ = np.unique(y)
         self.n_classes_ = len(self.classes_)
-        self.root_ = self._build_tree(X, y, depth=0)
+        self.root_ = self._build_tree(samples, lables, depth=0)
 
         return self
 
