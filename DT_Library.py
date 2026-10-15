@@ -339,19 +339,25 @@ class DecisionTree:
         """
         # 1. Check whether this node should become a leaf.
         # TODO: implement
-        if self._is_stopping_condition(X, y, depth):
-            if depth > self.depth_:
-                self.depth_ = depth
+        if depth > self.depth_:
+            self.depth_ = depth
 
+        if self._is_stopping_condition(X, y, depth):
             return self._create_leaf(y)
 
         # 2. Find the best feature and threshold.
         # TODO: implement
         feature_index, threshold = self._find_best_split(X, y)
 
+        if feature_index is None:
+            return self._create_leaf(y)
+
         # 3. Split the dataset using the selected feature and threshold.
         # TODO: implement
         left_samples, left_lables, right_samples, right_lables = self._split(X, y, feature_index, threshold)
+        # NOTE: according to project specifications and TA talks I decided
+        # the algorithm is not *ID3*, so it's not required to consider an attribute
+        # just once for each sample.
 
         # 4. Build the left subtree.
         left = self._build_tree(left_samples, left_lables, depth + 1)
@@ -443,7 +449,8 @@ class DecisionTree:
         if self.max_features is None:
             feature_indices = np.arange(self.n_features_)
         else:
-            feature_indices = self.rng_.choice(self.n_features_, size=self.max_features, replace=False)
+            feature_indices = self.rng_.choice(self.n_features_, size=min(self.max_features, self.n_features_),
+                                               replace=False)
 
         best_gain = 0
         best_feature_index = None
@@ -461,7 +468,7 @@ class DecisionTree:
 
                 gain = self._information_gain(lables, left_lables, right_lables)
 
-                if gain > best_gain:
+                if gain > best_gain or best_gain == 0:
                     best_gain = gain
                     best_feature_index = feature_index
                     best_threshold = threshold
@@ -554,7 +561,7 @@ class DecisionTree:
         # TODO
         samples = np.asarray(X)
         lables = np.asarray(y)
-        condition = samples[:, feature_index] <= threshold
+        condition = samples[:, feature_index] < threshold
         left = samples[condition]
         right = samples[~condition]
         left_lables = lables[condition]
