@@ -282,7 +282,12 @@ class DecisionTree:
             inside _build_tree().
         """
         # TODO
-        pass
+        self.n_features_ = len(X)
+        self.classes_ = np.unique(y)
+        self.n_classes_ = len(self.classes_)
+        self.root_ = self._build_tree(X, y, depth=0)
+
+        return self
 
     def _build_tree(self, X, y, depth):
         """
@@ -820,7 +825,19 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        def _is_leaf(node: Node):
+            return node.left is None and node.right is None
+
+        sample = np.asarray(x)
+        current_node = self.root_
+
+        while not _is_leaf(current_node):
+            feature_index = current_node.feature_index
+            threshold = current_node.threshold
+            current_node = current_node.left if sample[feature_index] < threshold else current_node.right
+
+        return current_node.value
+
     def predict(self, X):
         """
         Predict the class of each sample in X.
@@ -839,4 +856,10 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        samples = np.asarray(X)
+        predictions = np.zeros((len(samples)))
+
+        for i in range(len(samples)):
+            predictions[i] = self._predict_one(samples[i])
+
+        return predictions
