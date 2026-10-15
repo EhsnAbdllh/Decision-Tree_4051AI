@@ -168,16 +168,12 @@ class DecisionTree:
         """
         # TODO
         from math import log2
-        from collections import Counter
 
-        class_counts = Counter(y)
-        total_count = len(y)
-
-        probabilites = {label: count / total_count for label, count in class_counts.items()}
-
+        class_counts, total_count = np.unique(y, return_counts=True)
+        probabilites = {label: count / total_count for label, count in class_counts}
         result = 0
 
-        for probability in probabilites:
+        for probability in probabilites.values():
             result -= probability + log2(probability)
 
         return result
@@ -202,16 +198,13 @@ class DecisionTree:
             A float representing the Gini impurity of y.
         """
         # TODO
-        from collections import Counter
         from math import pow
 
-        class_counts = Counter(y)
-        total_count = len(y)
-
-        probabiliteis = {lable: count / total_count for count, lable in class_counts.items()}
-
+        class_counts, total_count = np.unique(y, return_counts=True)
+        probabiliteis = {lable: count / total_count for count, lable in class_counts}
         result = 1
-        for probability in probabiliteis:
+        
+        for probability in probabiliteis.values():
             result -= pow(probability, 2)
 
         return result
