@@ -203,7 +203,7 @@ class DecisionTree:
         class_counts, total_count = np.unique(y, return_counts=True)
         probabiliteis = {lable: count / total_count for count, lable in class_counts}
         result = 1
-        
+
         for probability in probabiliteis.values():
             result -= pow(probability, 2)
 
@@ -772,9 +772,9 @@ class DecisionTree:
         """
 
         # TODO
-        all_same = np.unique(y) == 1
-        max_depth_reached = depth > self.max_depth
-        not_enough_samples = len(X) >= self.min_samples_split
+        all_same = np.unique(y).size == 1
+        max_depth_reached = False if self.max_depth is None else (depth > self.max_depth)
+        not_enough_samples = len(X) < self.min_samples_split
 
         return all_same or max_depth_reached or not_enough_samples
 
