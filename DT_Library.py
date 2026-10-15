@@ -81,8 +81,8 @@ class DecisionTree:
         self.n_features_ = None
         self.n_classes_ = None
         self.classes_ = None
-        self.n_nodes_ = None
-        self.depth_ = None
+        self.n_nodes_ = 0
+        self.depth_ = 0
         self.feature_importances_ = None
         self.rng_ = np.random.default_rng(random_state)
 
@@ -283,6 +283,7 @@ class DecisionTree:
         """
         # TODO
         self.n_features_ = len(X)
+        self.feature_importances_ = np.zeros(self.n_features_)
         self.classes_ = np.unique(y)
         self.n_classes_ = len(self.classes_)
         self.root_ = self._build_tree(X, y, depth=0)
@@ -343,7 +344,10 @@ class DecisionTree:
         """
         # 1. Check whether this node should become a leaf.
         # TODO: implement
-        if self._is_stopping_condition(X, y):
+        if self._is_stopping_condition(X, y, depth):
+            if depth > self.depth_:
+                self.depth_ = depth
+
             return self._create_leaf(y)
 
         # 2. Find the best feature and threshold.
@@ -364,6 +368,8 @@ class DecisionTree:
         # TODO: implement
         root = Node(feature_index, threshold, left, right, samples=len(X), impurity=self._calculate_impurity(y),
                     class_counts=len(np.unique(y)))
+        self.n_nodes_ += 1
+        self.feature_importances_[feature_index] = self._information_gain(y, left_lables, right_lables)
 
         return root
 
