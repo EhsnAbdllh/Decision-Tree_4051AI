@@ -338,22 +338,30 @@ class DecisionTree:
         """
         # 1. Check whether this node should become a leaf.
         # TODO: implement
+        if self._is_stopping_condition(X, y):
+            return self._create_leaf(y)
 
         # 2. Find the best feature and threshold.
         # TODO: implement
+        feature_index, threshold = self._find_best_split(X, y)
 
         # 3. Split the dataset using the selected feature and threshold.
         # TODO: implement
+        left_samples, left_lables, right_samples, right_lables = self._split(X, y, feature_index, threshold)
 
         # 4. Build the left subtree.
-        # left = self._build_tree(X_left, y_left, depth + 1)
+        left = self._build_tree(left_samples, left_lables, depth + 1)
 
         # 5. Build the right subtree.
-        # right = self._build_tree(X_right, y_right, depth + 1)
+        right = self._build_tree(right_samples, right_lables, depth + 1)
 
         # 6. Create the current internal node.
         # TODO: implement
-        pass
+        root = Node(feature_index, threshold, left, right, samples=len(X), impurity=self._calculate_impurity(y),
+                    class_counts=len(np.unique(y)))
+
+        return root
+
 
     def _find_best_split(self, X, y):
         """
@@ -760,7 +768,11 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        all_same = np.unique(y) == 1
+        max_depth_reached = depth > self.max_depth
+        not_enough_samples = len(X) >= self.min_samples_split
+
+        return all_same or max_depth_reached or not_enough_samples
 
     def _create_leaf(self, y):
         """
@@ -779,7 +791,13 @@ class DecisionTree:
         """
 
         # TODO
-        pass
+        impurity = self._calculate_impurity(y)
+        samples_number = len(y)
+        classes, classes_count = np.unique(y, return_counts=True)
+        majority_class = classes[np.argmax(classes_count)]
+
+        return Node(value=majority_class, samples=samples_number, impurity=impurity, class_counts=len(classes))
+
     def _predict_one(self, x):
         """
         Predict the class of a single sample.
