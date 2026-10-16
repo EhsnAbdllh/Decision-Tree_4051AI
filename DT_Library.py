@@ -169,12 +169,13 @@ class DecisionTree:
         # TODO
         from math import log2
 
-        class_counts, total_count = np.unique(y, return_counts=True)
-        probabilites = {label: count / total_count for label, count in class_counts}
+        total_count = len(y)
+        lables, counts = np.unique(y, return_counts=True)
+        probabilities = {lables[i]: counts[i] / total_count for i in range(len(lables))}
         result = 0
 
-        for probability in probabilites.values():
-            result -= probability + log2(probability)
+        for probability in probabilities.values():
+            result -= probability * log2(probability)
 
         return result
 
@@ -200,11 +201,12 @@ class DecisionTree:
         # TODO
         from math import pow
 
-        class_counts, total_count = np.unique(y, return_counts=True)
-        probabiliteis = {lable: count / total_count for count, lable in class_counts}
+        total_count = len(y)
+        lables, counts = np.unique(y, return_counts=True)
+        probabilities = {lables[i]: counts[i] / total_count for i in range(len(lables))}
         result = 1
 
-        for probability in probabiliteis.values():
+        for probability in probabilities.values():
             result -= pow(probability, 2)
 
         return result
