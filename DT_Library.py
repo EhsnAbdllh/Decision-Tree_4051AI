@@ -349,7 +349,7 @@ class DecisionTree:
         # TODO: implement
         feature_index, threshold = self._find_best_split(X, y)
 
-        if feature_index is None:
+        if feature_index is None: # it means that no valid split is found
             return self._create_leaf(y)
 
         # 3. Split the dataset using the selected feature and threshold.
@@ -561,7 +561,13 @@ class DecisionTree:
         # TODO
         samples = np.asarray(X)
         lables = np.asarray(y)
-        condition = samples[:, feature_index] < threshold
+        feature_values = samples[:, feature_index]
+
+        if self._is_categorical_attribute(feature_values):
+            condition = samples[:, feature_index] == threshold
+        else:
+            condition = samples[:, feature_index] < threshold
+
         left = samples[condition]
         right = samples[~condition]
         left_lables = lables[condition]
@@ -633,7 +639,11 @@ class DecisionTree:
         # TODO
         values = np.asarray(feature_values)
         unique_values = np.unique(values)
-        thresholds = (unique_values[:-1] + unique_values[1:]) / 2 # mean of consequtive values
+
+        if self._is_categorical_attribute(unique_values):
+            thresholds = unique_values
+        else:
+            thresholds = (unique_values[:-1] + unique_values[1:]) / 2 # mean of consequtive values
 
         for threshold in thresholds:
             yield threshold
@@ -842,7 +852,11 @@ class DecisionTree:
         while not _is_leaf(current_node):
             feature_index = current_node.feature_index
             threshold = current_node.threshold
-            current_node = current_node.left if sample[feature_index] < threshold else current_node.right
+
+            if self._is_categorical_attribute(sample[feature_index]):
+                current_node = current_node.left if sample[feature_index] == threshold else current_node.right
+            else:
+                current_node = current_node.left if sample[feature_index] < threshold else current_node.right
 
         return current_node.value
 
@@ -865,9 +879,17 @@ class DecisionTree:
 
         # TODO
         samples = np.asarray(X)
-        predictions = np.zeros((len(samples)))
+        predictions = []
 
         for i in range(len(samples)):
             predictions[i] = self._predict_one(samples[i])
 
         return predictions
+
+    def _is_categorical_attribute(feature_values):
+        """
+        NOTE: this function is my extension to realize if an attribute is categorical type or no.
+        """
+        values = np.asarray(feature_values)
+
+        return not np.issubdtype(values.dtype, np.number)
