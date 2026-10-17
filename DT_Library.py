@@ -283,6 +283,8 @@ class DecisionTree:
         self.feature_importances_ = np.zeros(self.n_features_)
         self.classes_ = np.unique(y)
         self.n_classes_ = len(self.classes_)
+        self.n_nodes_ = 0
+        self.depth_ = 0
         self.root_ = self._build_tree(samples, lables, depth=0)
 
         return self
