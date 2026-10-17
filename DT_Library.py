@@ -890,7 +890,7 @@ class DecisionTree:
 
         return predictions
 
-    def _is_categorical_attribute(feature_values):
+    def _is_categorical_attribute(self, feature_values):
         """
         NOTE: this function is my extension to realize if an attribute is categorical type or no.
         """
