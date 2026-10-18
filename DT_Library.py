@@ -350,6 +350,7 @@ class DecisionTree:
             self.depth_ = depth
 
         if self._is_stopping_condition(X, y, depth):
+            self.n_nodes_ += 1
             return self._create_leaf(y)
 
         # 2. Find the best feature and threshold.
@@ -357,6 +358,7 @@ class DecisionTree:
         best_split = self._find_best_split(X, y)
 
         if best_split is None: # it means that no valid split is found
+            self.n_nodes_ += 1
             return self._create_leaf(y)
         else:
             feature_index, threshold = best_split
@@ -576,7 +578,7 @@ class DecisionTree:
         if self._is_categorical_attribute(feature_values):
             condition = samples[:, feature_index] == threshold
         else:
-            condition = samples[:, feature_index] < threshold
+            condition = samples[:, feature_index] <= threshold
 
         left = samples[condition]
         right = samples[~condition]
@@ -655,8 +657,7 @@ class DecisionTree:
         else:
             thresholds = (unique_values[:-1] + unique_values[1:]) / 2 # mean of consequtive values
 
-        for threshold in thresholds:
-            yield threshold
+        return [threshold for threshold in thresholds]
 
     def _calculate_impurity(self, y):
         """
@@ -802,7 +803,7 @@ class DecisionTree:
 
         # TODO
         all_same = np.unique(y).size == 1
-        max_depth_reached = False if self.max_depth is None else (depth > self.max_depth)
+        max_depth_reached = False if self.max_depth is None else (depth >= self.max_depth)
         not_enough_samples = len(X) < self.min_samples_split
 
         return all_same or max_depth_reached or not_enough_samples
@@ -866,7 +867,7 @@ class DecisionTree:
             if self._is_categorical_attribute(sample[feature_index]):
                 current_node = current_node.left if sample[feature_index] == threshold else current_node.right
             else:
-                current_node = current_node.left if sample[feature_index] < threshold else current_node.right
+                current_node = current_node.left if sample[feature_index] <= threshold else current_node.right
 
         return current_node.value
 
@@ -892,7 +893,7 @@ class DecisionTree:
         predictions = []
 
         for i in range(len(samples)):
-            predictions[i] = self._predict_one(samples[i])
+            predictions.append(self._predict_one(samples[i]))
 
         return predictions
 
