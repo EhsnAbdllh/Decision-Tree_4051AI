@@ -78,8 +78,8 @@ class DecisionTree:
         self.random_state = random_state
         
         self.root_ = None
-        self.n_features_ = None
-        self.n_classes_ = None
+        self.n_features_ = 0
+        self.n_classes_ = 0
         self.classes_ = None
         self.n_nodes_ = 0
         self.depth_ = 0
@@ -280,7 +280,7 @@ class DecisionTree:
         samples = np.asarray(X)
         lables = np.asarray(y)
         self.n_features_ = samples.shape[1]
-        self.feature_importances_ = np.zeros(self.n_features_)
+        # self.feature_importances_ = np.zeros(self.n_features_)
         self.classes_ = np.unique(y)
         self.n_classes_ = len(self.classes_)
         self.n_nodes_ = 0
@@ -374,7 +374,7 @@ class DecisionTree:
         root = Node(feature_index, threshold, left, right, samples=len(X), impurity=self._calculate_impurity(y),
                     class_counts=len(np.unique(y)))
         self.n_nodes_ += 1
-        self.feature_importances_[feature_index] = self._information_gain(y, left_lables, right_lables)
+        # self.feature_importances_[feature_index] = self._information_gain(y, left_lables, right_lables)
 
         return root
 
@@ -449,11 +449,12 @@ class DecisionTree:
         # TODO
         samples = np.asarray(X)
         lables = np.asarray(y)
+        features_number = samples.shape[1]
 
         if self.max_features is None:
-            feature_indices = np.arange(self.n_features_)
+            feature_indices = np.arange(features_number)
         else:
-            feature_indices = self.rng_.choice(self.n_features_, size=min(self.max_features, self.n_features_),
+            feature_indices = self.rng_.choice(features_number, size=min(self.max_features, features_number),
                                                replace=False)
 
         best_gain = 0
