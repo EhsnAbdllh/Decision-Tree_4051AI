@@ -234,10 +234,13 @@ class DecisionTree:
             A float representing the information gain of the split.
         """
         # TODO
-        if self.criterion == "gini":
-            gain = self._gini(y) - self._weighted_gini(y_left, y_right)
-        elif self.criterion == "entropy":
-            gain = self._entropy(y) - self._weighted_entropy(y_left, y_right)
+        parent = np.asarray(y)
+        left = np.asarray(y_left)
+        right = np.asarray(y_right)
+        parent_impurity = self._calculate_impurity(parent)
+        left_weight = (left.size) / (parent.size)
+        right_weight = (right.size) / (parent.size)
+        gain = parent_impurity - left_weight * self._calculate_impurity(left) - right_weight * self._calculate_impurity(right)
 
         return gain
 
@@ -351,16 +354,18 @@ class DecisionTree:
 
         # 2. Find the best feature and threshold.
         # TODO: implement
-        feature_index, threshold = self._find_best_split(X, y)
+        best_split = self._find_best_split(X, y)
 
-        if feature_index is None: # it means that no valid split is found
+        if best_split is None: # it means that no valid split is found
             return self._create_leaf(y)
+        else:
+            feature_index, threshold = best_split
 
         # 3. Split the dataset using the selected feature and threshold.
         # TODO: implement
         left_samples, left_lables, right_samples, right_lables = self._split(X, y, feature_index, threshold)
         # NOTE: according to project specifications and TA talks I decided
-        # the algorithm is not *ID3*, so it's not required to consider an attribute
+        # the algorithm must be *ID3*, so it's required to consider an attribute
         # just once for each sample.
 
         # 4. Build the left subtree.
@@ -478,7 +483,7 @@ class DecisionTree:
                     best_feature_index = feature_index
                     best_threshold = threshold
 
-        return best_feature_index, best_threshold
+        return None if best_feature_index is None else (best_feature_index, best_threshold)
 
 
     def _split(self, X, y, feature_index, threshold):
