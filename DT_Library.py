@@ -167,15 +167,10 @@ class DecisionTree:
             A float representing the entropy of y.
         """
         # TODO
-        from math import log2
-
         total_count = len(y)
-        lables, counts = np.unique(y, return_counts=True)
-        probabilities = {lables[i]: counts[i] / total_count for i in range(len(lables))}
-        result = 0
-
-        for probability in probabilities.values():
-            result -= probability * log2(probability)
+        _, counts = np.unique(y, return_counts=True)
+        probabilities = counts / total_count
+        result = - np.sum(probabilities * np.log2(probabilities))
 
         return result
 
@@ -199,15 +194,10 @@ class DecisionTree:
             A float representing the Gini impurity of y.
         """
         # TODO
-        from math import pow
-
         total_count = len(y)
-        lables, counts = np.unique(y, return_counts=True)
-        probabilities = {lables[i]: counts[i] / total_count for i in range(len(lables))}
-        result = 1
-
-        for probability in probabilities.values():
-            result -= pow(probability, 2)
+        _, counts = np.unique(y, return_counts=True)
+        probabilities = counts / total_count
+        result = 1.0 - np.sum(probabilities ** 2)
 
         return result
 
@@ -281,14 +271,23 @@ class DecisionTree:
         """
         # TODO
         samples = np.asarray(X)
-        lables = np.asarray(y)
+        labels = np.asarray(y)
         self.n_features_ = samples.shape[1]
-        # self.feature_importances_ = np.zeros(self.n_features_)
+        self.feature_importances_ = np.zeros(self.n_features_)
         self.classes_ = np.unique(y)
         self.n_classes_ = len(self.classes_)
         self.n_nodes_ = 0
         self.depth_ = 0
-        self.root_ = self._build_tree(samples, lables, depth=0)
+        self.root_ = self._build_tree(samples, labels, depth=0)
+
+        # MDI method for calculating feature importances: 
+        #       impurity_decrease(feature) = (node_samples/total_samples) * node_gain
+        #       importance(feature) = impurity_decrease(feature) / total_impurity_decreases
+
+        self.feature_importances_ /= samples.shape[0] # produce the weights
+        total_importances = np.sum(self.feature_importances_)
+        if total_importances > 0:
+            self.feature_importances_ /= np.sum(self.feature_importances_) # normalize
 
         return self
 
@@ -348,9 +347,9 @@ class DecisionTree:
         # TODO: implement
         if depth > self.depth_:
             self.depth_ = depth
+        self.n_nodes_ += 1
 
         if self._is_stopping_condition(X, y, depth):
-            self.n_nodes_ += 1
             return self._create_leaf(y)
 
         # 2. Find the best feature and threshold.
@@ -358,30 +357,33 @@ class DecisionTree:
         best_split = self._find_best_split(X, y)
 
         if best_split is None: # it means that no valid split is found
-            self.n_nodes_ += 1
             return self._create_leaf(y)
         else:
             feature_index, threshold = best_split
 
         # 3. Split the dataset using the selected feature and threshold.
         # TODO: implement
-        left_samples, left_lables, right_samples, right_lables = self._split(X, y, feature_index, threshold)
+        left_samples, left_labels, right_samples, right_labels = self._split(X, y, feature_index, threshold)
         # NOTE: according to project specifications and TA talks I decided
         # the algorithm must be *ID3*, so it's required to consider an attribute
         # just once for each sample.
 
         # 4. Build the left subtree.
-        left = self._build_tree(left_samples, left_lables, depth + 1)
+        left = self._build_tree(left_samples, left_labels, depth + 1)
 
         # 5. Build the right subtree.
-        right = self._build_tree(right_samples, right_lables, depth + 1)
+        right = self._build_tree(right_samples, right_labels, depth + 1)
 
         # 6. Create the current internal node.
         # TODO: implement
+        classes, counts = np.unique(y, return_counts=True)
+        class_counts = {classes[i]: counts[i] for i in range(len(classes))}
         root = Node(feature_index, threshold, left, right, samples=len(X), impurity=self._calculate_impurity(y),
-                    class_counts=len(np.unique(y)))
-        self.n_nodes_ += 1
-        # self.feature_importances_[feature_index] = self._information_gain(y, left_lables, right_lables)
+                    class_counts=class_counts)
+
+        # calculate learn attributes
+        if self.feature_importances_ is not None:
+            self.feature_importances_[feature_index] += len(y) * self._information_gain(y, left_labels, right_labels)
 
         return root
 
@@ -455,7 +457,7 @@ class DecisionTree:
 
         # TODO
         samples = np.asarray(X)
-        lables = np.asarray(y)
+        labels = np.asarray(y)
         features_number = samples.shape[1]
 
         if self.max_features is None:
@@ -473,12 +475,12 @@ class DecisionTree:
             thresholds = self._get_candidate_thresholds(feature_values)
 
             for threshold in thresholds:
-                left, left_lables, right, right_lables = self._split(samples, lables, feature_index, threshold)
+                left, left_labels, right, right_labels = self._split(samples, labels, feature_index, threshold)
 
                 if len(left) < self.min_samples_leaf or len(right) < self.min_samples_leaf:
                     continue
 
-                gain = self._information_gain(lables, left_lables, right_lables)
+                gain = self._information_gain(labels, left_labels, right_labels)
 
                 if gain > best_gain or best_gain == 0:
                     best_gain = gain
@@ -572,7 +574,7 @@ class DecisionTree:
 
         # TODO
         samples = np.asarray(X)
-        lables = np.asarray(y)
+        labels = np.asarray(y)
         feature_values = samples[:, feature_index]
 
         if self._is_categorical_attribute(feature_values):
@@ -582,10 +584,10 @@ class DecisionTree:
 
         left = samples[condition]
         right = samples[~condition]
-        left_lables = lables[condition]
-        right_lables = lables[~condition]
+        left_labels = labels[condition]
+        right_labels = labels[~condition]
 
-        return left, left_lables, right, right_lables
+        return left, left_labels, right, right_labels
 
 
     def _get_candidate_thresholds(self, feature_values):
@@ -827,10 +829,11 @@ class DecisionTree:
         # TODO
         impurity = self._calculate_impurity(y)
         samples_number = len(y)
-        classes, classes_count = np.unique(y, return_counts=True)
-        majority_class = classes[np.argmax(classes_count)]
+        classes, counts = np.unique(y, return_counts=True)
+        class_counts = {classes[i]: counts[i] for i in range(len(classes))}
+        majority_class = classes[np.argmax(counts)]
 
-        return Node(value=majority_class, samples=samples_number, impurity=impurity, class_counts=len(classes))
+        return Node(value=majority_class, samples=samples_number, impurity=impurity, class_counts=class_counts)
 
     def _predict_one(self, x):
         """
@@ -854,13 +857,10 @@ class DecisionTree:
         """
 
         # TODO
-        def _is_leaf(node: Node):
-            return node.left is None and node.right is None
-
         sample = np.asarray(x)
         current_node = self.root_
 
-        while not _is_leaf(current_node):
+        while not current_node.is_leaf():
             feature_index = current_node.feature_index
             threshold = current_node.threshold
 
@@ -889,6 +889,9 @@ class DecisionTree:
         """
 
         # TODO
+        if self.root_ is None:
+            raise RuntimeError
+        
         samples = np.asarray(X)
         predictions = []
 
