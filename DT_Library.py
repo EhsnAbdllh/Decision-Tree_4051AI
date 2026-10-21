@@ -379,7 +379,7 @@ class DecisionTree:
         classes, counts = np.unique(y, return_counts=True)
         class_counts = {classes[i]: counts[i] for i in range(len(classes))}
         root = Node(feature_index, threshold, left, right, samples=len(X), impurity=self._calculate_impurity(y),
-                    class_counts=class_counts)
+                    class_counts=class_counts, value=classes[np.argmax(counts)])
 
         # calculate learn attributes
         if self.feature_importances_ is not None:
